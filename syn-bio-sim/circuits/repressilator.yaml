@@ -1,0 +1,89 @@
+# Repressilator Circuit Definition
+# 3-Gene Oscillator (Elowitz & Leibler, 2000)
+#
+# Circuit topology:
+# - TetR represses LacI
+# - LacI represses CI (λ repressor)
+# - CI represses TetR
+# - Forms negative feedback loop → oscillations
+
+nodes:
+  # Promoters
+  - id: P_TetR
+    type: promoter
+    params:
+      k_basal: 0.0005
+
+  - id: P_LacI
+    type: promoter
+    params:
+      k_basal: 0.0005
+
+  - id: P_CI
+    type: promoter
+    params:
+      k_basal: 0.0005
+
+  # Repressor proteins
+  - id: TetR
+    type: repressor
+    params:
+      k_tx: 0.015      # Transcription rate
+      delta: 0.0015    # Degradation rate (slower for oscillations)
+      
+  - id: LacI
+    type: repressor
+    params:
+      k_tx: 0.015
+      delta: 0.0015
+      
+  - id: CI
+    type: repressor
+    params:
+      k_tx: 0.015
+      delta: 0.0015
+
+edges:
+  # Production edges
+  - source: P_TetR
+    target: TetR
+    interaction: production
+    params:
+      k_tx: 0.015
+
+  - source: P_LacI
+    target: LacI
+    interaction: production
+    params:
+      k_tx: 0.015
+
+  - source: P_CI
+    target: CI
+    interaction: production
+    params:
+      k_tx: 0.015
+
+  # Repression edges (circular negative feedback)
+  - source: CI
+    target: P_TetR
+    interaction: repression
+    hill_coefficient: 2.5
+    params:
+      K: 5.0e-8      # Moderate affinity for sustained oscillations
+      k_leak: 0.005
+
+  - source: TetR
+    target: P_LacI
+    interaction: repression
+    hill_coefficient: 2.5
+    params:
+      K: 5.0e-8
+      k_leak: 0.005
+
+  - source: LacI
+    target: P_CI
+    interaction: repression
+    hill_coefficient: 2.5
+    params:
+      K: 5.0e-8
+      k_leak: 0.005

@@ -1,0 +1,24 @@
+# Core numerical computing
+numpy>=1.24.0
+scipy>=1.10.0
+
+# Data structures and validation
+pyyaml>=6.0
+
+# Visualization and graph analysis
+matplotlib>=3.7.0
+networkx>=3.0
+
+# Data export
+h5py>=3.8.0
+
+# Testing
+pytest>=7.3.0
+pytest-cov>=4.1.0
+
+# Optional: for advanced features
+# sympy>=1.12       # symbolic math for kinetics compilation
+# pint>=0.21        # unit management
+# pillow>=10.0      # animation support
+# jax>=0.4.0        # GPU acceleration (Phase 5)
+# cupy>=12.0        # GPU arrays (Phase 5)

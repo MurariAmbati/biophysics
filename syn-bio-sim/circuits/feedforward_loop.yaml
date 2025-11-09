@@ -1,0 +1,85 @@
+# Feedforward Loop Circuit
+# A activates both B and C, B activates C
+# Creates pulse detection and delay dynamics
+
+nodes:
+  # Master regulator
+  - id: Master_A
+    type: protein
+    params:
+      k_tx: 0.02
+      delta: 0.001
+
+  # Intermediate regulator
+  - id: Intermediate_B
+    type: protein
+    params:
+      k_tx: 0.015
+      delta: 0.003
+
+  # Target gene
+  - id: Target_C
+    type: reporter
+    params:
+      k_tx: 0.025
+      delta: 0.002
+
+  # Promoters
+  - id: P_A
+    type: promoter
+    params: {}
+
+  - id: P_B
+    type: promoter
+    params: {}
+
+  - id: P_C
+    type: promoter
+    params: {}
+
+edges:
+  # A production (input signal)
+  - source: P_A
+    target: Master_A
+    interaction: production
+    params:
+      k_tx: 0.02
+
+  # A activates B
+  - source: Master_A
+    target: P_B
+    interaction: activation
+    hill_coefficient: 2.0
+    params:
+      K: 2.0e-8
+      V_max: 0.015
+
+  - source: P_B
+    target: Intermediate_B
+    interaction: production
+    params:
+      k_tx: 0.015
+
+  # A activates C (direct path)
+  - source: Master_A
+    target: P_C
+    interaction: activation
+    hill_coefficient: 2.0
+    params:
+      K: 2.0e-8
+      V_max: 0.025
+
+  # B activates C (indirect path via feedforward)
+  - source: Intermediate_B
+    target: P_C
+    interaction: activation
+    hill_coefficient: 2.0
+    params:
+      K: 1.5e-8
+      V_max: 0.025
+
+  - source: P_C
+    target: Target_C
+    interaction: production
+    params:
+      k_tx: 0.025

@@ -1,0 +1,63 @@
+# Toggle Switch Circuit Definition
+# LacI-TetR Bistable System (Gardner et al. 2000)
+#
+# Circuit topology:
+# - LacI repressor represses TetR promoter
+# - TetR repressor represses LacI promoter
+# - Mutual repression creates bistable switch
+
+nodes:
+  # Promoters
+  - id: P_LacI
+    type: promoter
+    params:
+      k_basal: 0.0001  # Basal transcription rate (mol/L/s)
+
+  - id: P_TetR
+    type: promoter
+    params:
+      k_basal: 0.0001
+
+  # Repressor proteins
+  - id: LacI
+    type: repressor
+    params:
+      k_tx: 0.02       # Transcription rate (1/s)
+      delta: 0.001     # Degradation rate (1/s)
+      
+  - id: TetR
+    type: repressor
+    params:
+      k_tx: 0.02
+      delta: 0.001
+
+edges:
+  # Production edges (promoter -> protein)
+  - source: P_LacI
+    target: LacI
+    interaction: production
+    params:
+      k_tx: 0.02  # mol/L/s
+
+  - source: P_TetR
+    target: TetR
+    interaction: production
+    params:
+      k_tx: 0.02
+
+  # Repression edges
+  - source: TetR
+    target: P_LacI
+    interaction: repression
+    hill_coefficient: 2.0
+    params:
+      K: 1.0e-8      # Half-saturation constant (mol/L)
+      k_leak: 0.01   # Leakiness (fraction of max when fully repressed)
+
+  - source: LacI
+    target: P_TetR
+    interaction: repression
+    hill_coefficient: 2.0
+    params:
+      K: 1.0e-8
+      k_leak: 0.01

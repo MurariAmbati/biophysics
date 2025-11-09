@@ -1,0 +1,79 @@
+# Logic AND Gate Circuit
+# Two inputs (A, B) must both be present to activate output
+
+nodes:
+  # Input promoters
+  - id: P_Input_A
+    type: promoter
+    params:
+      k_basal: 0.0001
+
+  - id: P_Input_B
+    type: promoter
+    params:
+      k_basal: 0.0001
+
+  # Hybrid promoter (requires both activators)
+  - id: P_Output
+    type: promoter
+    params:
+      k_basal: 0.0001
+
+  # Activator proteins
+  - id: Activator_A
+    type: protein
+    params:
+      k_tx: 0.02
+      delta: 0.002
+
+  - id: Activator_B
+    type: protein
+    params:
+      k_tx: 0.02
+      delta: 0.002
+
+  # Output protein (e.g., GFP reporter)
+  - id: GFP
+    type: reporter
+    params:
+      k_tx: 0.03
+      delta: 0.001
+
+edges:
+  # Input A production
+  - source: P_Input_A
+    target: Activator_A
+    interaction: production
+    params:
+      k_tx: 0.02
+
+  # Input B production
+  - source: P_Input_B
+    target: Activator_B
+    interaction: production
+    params:
+      k_tx: 0.02
+
+  # Both activators required for output (AND logic)
+  - source: Activator_A
+    target: P_Output
+    interaction: activation
+    hill_coefficient: 2.0
+    params:
+      K: 1.0e-8
+      V_max: 0.03
+
+  - source: Activator_B
+    target: P_Output
+    interaction: activation
+    hill_coefficient: 2.0
+    params:
+      K: 1.0e-8
+      V_max: 0.03
+
+  # Output production
+  - source: P_Output
+    target: GFP
+    interaction: production
+    params:
+      k_tx: 0.03
