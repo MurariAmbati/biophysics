@@ -1,0 +1,2 @@
+[console_scripts]
+dna-knot = dna_knot.__main__:main

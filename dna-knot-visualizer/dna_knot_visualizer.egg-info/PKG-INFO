@@ -1,0 +1,341 @@
+Metadata-Version: 2.1
+Name: dna-knot-visualizer
+Version: 1.0.0
+Summary: High-precision procedural knot generator, analyzer, and visualizer
+Home-page: https://github.com/yourusername/dna-knot-visualizer
+Author: DNA Knot Visualizer Project
+Classifier: Development Status :: 4 - Beta
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Classifier: Topic :: Scientific/Engineering :: Mathematics
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.8
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Requires-Python: >=3.8
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: sympy>=1.12
+Requires-Dist: matplotlib>=3.7.0
+Requires-Dist: trimesh>=3.21.0
+Requires-Dist: svgwrite>=1.4.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Requires-Dist: black>=23.0; extra == "dev"
+Requires-Dist: flake8>=6.0; extra == "dev"
+
+# DNA Knot Visualizer
+
+**High-precision procedural knot generator, analyzer, and visualizer for modeling circular DNA and polymer loops.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+
+## Overview
+
+DNA Knot Visualizer is a comprehensive computational toolkit for generating, analyzing, and visualizing mathematical knots. It provides:
+
+- **Procedural Generation**: Torus knots T(p,q), prime knot templates, random polygonal loops
+- **Topological Invariants**: Alexander polynomial, writhe, linking number, crossing number, determinant
+- **Planar Diagrams**: Generic projection with crossing detection and over/under information
+- **Simplification**: Energy minimization via gradient descent with topology preservation
+- **Visualization**: 3D tube rendering and 2D SVG planar diagrams with proper over/under bridges
+- **Export**: JSON sessions, OBJ geometry, SVG diagrams, PNG images
+
+All geometry is procedurally generated—no experimental data required. Perfect for research in topology, polymer physics, and DNA structure.
+
+## Precision & Reliability
+
+- **Float64** geometry and numeric invariants
+- **ε = 1e-9** tolerance for geometric predicates
+- **Deterministic** generation with seeded RNG
+- **Exact integer arithmetic** for polynomial computation (SymPy)
+- **Topology preservation** during energy minimization
+
+## Installation
+
+```bash
+# Clone repository
+git clone https://github.com/yourusername/dna-knot-visualizer.git
+cd dna-knot-visualizer
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Optional: Install in development mode
+pip install -e .
+```
+
+**Requirements:** Python 3.8+, NumPy, SciPy, SymPy, Matplotlib, svgwrite
+
+## Quick Start
+
+### Run the Demo
+
+```bash
+python demo.py
+```
+
+This comprehensive demo showcases all features: generation, invariants, simplification, and export.
+
+### Python API
+
+```python
+from dna_knot.generators import TorusKnotGenerator
+from dna_knot.invariants import compute_invariants_summary
+from dna_knot.visualization import plot_knot_3d
+import matplotlib.pyplot as plt
+
+# Generate trefoil knot T(2,3)
+gen = TorusKnotGenerator(p=2, q=3, R=2.0, r=0.5, N=512, seed=42)
+knot = gen.generate()
+
+# Compute topological invariants
+diagram = knot.project()
+invariants = compute_invariants_summary(diagram)
+
+print(f"Crossings: {invariants['n_crossings']}")
+print(f"Writhe: {invariants['writhe']}")
+print(f"Alexander polynomial: {invariants['alexander_polynomial']}")
+
+# Visualize in 3D
+plot_knot_3d(knot)
+plt.show()
+```
+
+### Command Line Interface
+
+```bash
+# Generate trefoil knot
+python -m dna_knot generate --type torus --p 2 --q 3 --N 512 --seed 42 --out trefoil.json
+
+# Compute invariants
+python -m dna_knot compute --session trefoil.json --invariants
+
+# Simplify via energy minimization
+python -m dna_knot simplify --session trefoil.json --method energy --steps 2000 --out trefoil_simplified.json
+
+# Export SVG planar diagram
+python -m dna_knot export --session trefoil.json --format svg --out trefoil.svg
+
+# Export 3D geometry (OBJ)
+python -m dna_knot export --session trefoil.json --format obj --out trefoil.obj
+
+# Visualize interactively
+python -m dna_knot visualize --session trefoil.json
+```
+
+## Key Features
+
+### 1. Procedural Knot Generators
+
+**Torus Knots T(p,q)**
+```python
+gen = TorusKnotGenerator(p=2, q=3, N=512, seed=42)
+knot = gen.generate()
+```
+
+**Prime Knot Templates** (unknot, trefoil, figure-eight, cinquefoil, three-twist)
+```python
+gen = PrimeKnotGenerator(knot_type="figure_eight", N=512)
+knot = gen.generate()
+```
+
+**Random Polygonal Loops** (uniform, equilateral, self-avoiding)
+```python
+gen = RandomPolygonGenerator(N=256, mode="self_avoiding", seed=42)
+knot = gen.generate()
+```
+
+### 2. Topological Invariants
+
+**Alexander Polynomial** (via Wirtinger presentation & Fox calculus)
+```python
+poly = compute_alexander_polynomial(diagram)
+det = alexander_determinant(poly)
+```
+
+**Basic Invariants**
+```python
+writhe = compute_writhe(diagram)
+crossing_num = compute_crossing_number(diagram)
+```
+
+### 3. Energy Minimization
+
+Tighten knots via gradient descent on elastic energy:
+```python
+simplified = minimize_energy(
+    knot,
+    max_iters=2000,
+    check_topology=True,  # Verify topology preservation
+    verbose=True
+)
+```
+
+Energy functional:
+- **Bending energy**: ∫ κ² (curvature squared)
+- **Repulsion energy**: ∑ 1/r^p (self-avoidance)
+
+### 4. Visualization
+
+**3D Rendering**
+```python
+from dna_knot.visualization import plot_knot_3d, save_knot_3d
+
+plot_knot_3d(knot, color='blue', linewidth=2)
+save_knot_3d(knot, "knot.png", dpi=150)
+```
+
+**SVG Planar Diagrams** (with proper over/under crossings)
+```python
+from dna_knot.visualization import export_planar_diagram_svg
+
+export_planar_diagram_svg(diagram, "diagram.svg", show_crossings=True)
+```
+
+## Project Structure
+
+```
+dna-knot-visualizer/
+├── dna_knot/
+│   ├── core/              # Data models (Knot, Crossing, PlanarDiagram)
+│   ├── generators/        # Procedural knot generators
+│   ├── projection/        # Projection & crossing detection
+│   ├── invariants/        # Alexander polynomial, writhe, etc.
+│   ├── simplification/    # Energy minimization
+│   ├── visualization/     # 3D plots, SVG export
+│   └── io/                # Session save/load, export formats
+├── tests/                 # Comprehensive test suite
+├── examples/              # Example scripts
+├── demo.py               # Full feature demonstration
+├── GUIDE.md              # Detailed user guide
+└── README.md             # This file
+```
+
+## Examples
+
+See `examples/` directory for complete working examples:
+
+- **`example_trefoil.py`**: Generate and analyze trefoil knot
+- **`example_simplification.py`**: Energy-based simplification workflow
+- **`example_polynomials.py`**: Compare Alexander polynomials across knot types
+
+Run any example:
+```bash
+python examples/example_trefoil.py
+```
+
+## Testing
+
+Comprehensive test suite with validation against canonical values:
+
+```bash
+# Run all tests
+pytest tests/test_dna_knot.py -v
+
+# Run with coverage
+pytest tests/test_dna_knot.py --cov=dna_knot --cov-report=html
+```
+
+Tests include:
+- Deterministic generator validation
+- Alexander polynomial verification (unknot, trefoil, figure-eight)
+- Crossing detection accuracy
+- Topology preservation during minimization
+- IO round-trip integrity
+
+## Mathematical Background
+
+### Alexander Polynomial
+
+Computed via **Wirtinger presentation** from planar diagram:
+1. Build presentation: one generator per arc, one relation per crossing
+2. Compute Alexander matrix via **Fox calculus** derivatives
+3. Polynomial = det(Alexander matrix minor)
+
+Canonical values:
+- Unknot: Δ(t) = 1
+- Trefoil: Δ(t) = t² - t + 1
+- Figure-eight: Δ(t) = t² - 3t + 1
+
+### Energy Functional
+
+Total energy E = E_bend + E_rep
+
+**Bending energy** (discrete curvature):
+$$E_{bend} = \sum_i |v_{i+1} - 2v_i + v_{i-1}|^2$$
+
+**Repulsion energy** (self-avoidance):
+$$E_{rep} = \sum_{i<j, |i-j|>2} \frac{1}{r_{ij}^p}$$
+
+Minimized via gradient descent with collision detection to preserve topology.
+
+## Performance
+
+- **Typical usage**: 200-512 vertices, 20-200 crossings
+- **Alexander polynomial**: O(C³) for C crossings (tractable up to ~200 crossings)
+- **Energy minimization**: O(N²) per iteration for N vertices
+- **Crossing detection**: O(M²) for M edges (naive); can be accelerated with spatial indexing
+
+## Validation & Canonical References
+
+The implementation is validated against:
+- **Rolfsen's knot tables** (Alexander polynomials)
+- **Standard knot invariants** from KnotInfo database
+- **Self-consistency checks** (topology preservation)
+
+All generators use seeded RNG for **reproducibility**.
+
+## Documentation
+
+- **`README.md`**: This file (overview & quick start)
+- **`GUIDE.md`**: Comprehensive user guide with detailed API documentation
+- **`examples/`**: Working code examples
+- **`tests/`**: Test suite doubles as usage examples
+
+## Contributing
+
+Contributions welcome! Areas for expansion:
+- Additional knot families (Lissajous knots, billiard knots)
+- Jones polynomial computation
+- Reidemeister move detection and simplification
+- Interactive WebGL visualization (Three.js frontend)
+- Performance optimization (spatial indexing, GPU acceleration)
+
+## Citation
+
+If you use DNA Knot Visualizer in research, please cite:
+
+```
+@software{dna_knot_visualizer,
+  title={DNA Knot Visualizer: High-Precision Topological Analysis of Knotted Curves},
+  author={Your Name},
+  year={2025},
+  url={https://github.com/yourusername/dna-knot-visualizer}
+}
+```
+
+## References
+
+1. **Knot theory**: Rolfsen, D. (1976). *Knots and Links*. Publish or Perish.
+2. **Alexander polynomial**: Fox, R. H. (1962). "A quick trip through knot theory."
+3. **Energy minimization**: Cantarella, J. et al. (2002). "Ropelength minimizers exist."
+4. **Computational knot theory**: Livingston, C. (1993). *Knot Theory*. MAA.
+
+## License
+
+MIT License - see `LICENSE` file for details.
+
+Copyright (c) 2025 DNA Knot Visualizer Project
+
+## Acknowledgments
+
+Built with: NumPy, SciPy, SymPy, Matplotlib, svgwrite
+
+Inspired by classical knot theory and modern computational topology research.
