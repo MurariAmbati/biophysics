@@ -1,0 +1,200 @@
+Metadata-Version: 2.4
+Name: computational-cell
+Version: 0.1.0
+Summary: Precision whole-cell modeling framework for multiscale biological simulations
+Author-email: Your Name <your.email@example.com>
+License: MIT
+Project-URL: Homepage, https://github.com/yourusername/computational-cell
+Project-URL: Documentation, https://computational-cell.readthedocs.io
+Project-URL: Repository, https://github.com/yourusername/computational-cell.git
+Project-URL: Issues, https://github.com/yourusername/computational-cell/issues
+Keywords: computational biology,whole-cell modeling,multiscale simulation,systems biology
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Scientific/Engineering :: Physics
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: h5py>=3.8.0
+Requires-Dist: pyyaml>=6.0
+Requires-Dist: jsonschema>=4.17.0
+Requires-Dist: meshio>=5.3.0
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: sympy>=1.12
+Provides-Extra: dev
+Requires-Dist: pytest>=7.3.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.1.0; extra == "dev"
+Requires-Dist: pytest-xdist>=3.3.0; extra == "dev"
+Requires-Dist: black>=23.3.0; extra == "dev"
+Requires-Dist: ruff>=0.0.270; extra == "dev"
+Requires-Dist: mypy>=1.3.0; extra == "dev"
+Requires-Dist: sphinx>=6.2.0; extra == "dev"
+Requires-Dist: sphinx-rtd-theme>=1.2.0; extra == "dev"
+Requires-Dist: jupyter>=1.0.0; extra == "dev"
+Requires-Dist: matplotlib>=3.7.0; extra == "dev"
+Requires-Dist: seaborn>=0.12.0; extra == "dev"
+Provides-Extra: fem
+Requires-Dist: fenics>=2019.1.0; extra == "fem"
+Provides-Extra: fast
+Requires-Dist: numba>=0.57.0; extra == "fast"
+Provides-Extra: viz
+Requires-Dist: pyvista>=0.39.0; extra == "viz"
+Requires-Dist: plotly>=5.14.0; extra == "viz"
+Provides-Extra: all
+Requires-Dist: computational-cell[dev,fast,fem,viz]; extra == "all"
+Dynamic: license-file
+
+# Computational Cell: Precision Whole-Cell Modeling Framework
+
+A hybrid multiscale simulation framework for modeling single cells (prokaryotic or eukaryotic) across molecular, subcellular, and cellular scales.
+
+## Overview
+
+**computational-cell** integrates:
+- **Molecular scale** (nm, µs): stochastic kinetics, Gillespie algorithms
+- **Subcellular scale** (organelles, 10-1000 nm, ms-s): reaction-diffusion PDEs, FEM
+- **Cellular scale** (µm, s-hours): mechanics, metabolism (FBA), gene regulation
+
+### Key Features
+
+- **Multiscale coupling**: Conservative mass/flux transfer between ODE, stochastic, PDE, and particle models
+- **Deterministic reproducibility**: Seeded RNG, versioned metadata, checkpoint/restore
+- **Numerical rigor**: Adaptive time stepping, configurable tolerances (default: rtol=1e-6, atol=1e-9)
+- **Modular architecture**: Plug-and-play modules for kinetics, diffusion, mechanics, metabolism
+- **SI units internally**: Automatic conversion from typical biological units
+- **HPC-ready**: Sparse linear solvers, AMG preconditioning, profiling hooks
+
+## Installation
+
+### Via pip (once published)
+```bash
+pip install computational-cell
+```
+
+### Development install
+```bash
+git clone https://github.com/yourusername/computational-cell.git
+cd computational-cell
+pip install -e ".[dev]"
+```
+
+### Docker
+```bash
+docker build -t computational-cell .
+docker run -v $(pwd)/data:/data computational-cell python -m cc.core.run --config /data/config.yaml
+```
+
+## Quick Start
+
+```python
+from cc.core.simulation import Simulation, SimulationConfig
+from cc.kinetics import ReactionNetwork
+from cc.pde import DiffusionSolver
+from cc.geometry import Mesh
+
+# Configure simulation
+config = SimulationConfig(
+    t_start=0.0,
+    t_end=100.0,
+    dt_max=1.0,
+    coupling_dt=0.01,
+    rtol=1e-6,
+    atol=1e-9,
+    seed=42
+)
+
+# Load mesh
+mesh = Mesh.from_file("examples/minimal_wholecell/mesh.xdmf")
+
+# Initialize modules
+kinetics = ReactionNetwork(mesh=mesh, config=config)
+diffusion = DiffusionSolver(mesh=mesh, config=config)
+
+# Run simulation
+sim = Simulation(config=config, modules=[kinetics, diffusion])
+sim.run()
+
+# Save checkpoint
+sim.checkpoint("output/checkpoint_t100.h5")
+```
+
+## Modules
+
+| Module | Purpose | Numerical Methods |
+|--------|---------|-------------------|
+| **Core** | Orchestration, time stepping, checkpointing | Adaptive multi-rate stepping |
+| **Geometry** | Mesh management, refinement, I/O | FEM tetrahedral meshes, AMR |
+| **Kinetics** | Reaction networks (ODE/stochastic) | CVODE, Gillespie, τ-leap |
+| **PDE** | Diffusion-reaction equations | FEM, implicit Crank-Nicolson |
+| **Membranes** | Channels, pumps, electrodiffusion | Hodgkin-Huxley, Nernst-Planck |
+| **Metabolism** | FBA, dynamic FBA | LP (HiGHS), flux balance |
+| **Regulation** | Gene expression, transcription | Stochastic promoter models |
+| **Mechanics** | Cytoskeleton, membrane mechanics | FEM elasticity, active stress |
+| **Coupling** | Multiscale synchronization | Conservative interpolation |
+| **Observables** | Measurement models, noise | Fluorescence PSF, patch clamp |
+
+## Validation & Testing
+
+Run test suite:
+```bash
+pytest tests/ -v --cov=cc
+```
+
+Key validation tests:
+- **Mass conservation**: Relative error < 1e-6 across coupling steps
+- **Deterministic reproducibility**: Bit-identical outputs for same seed
+- **Analytic benchmarks**: Gaussian diffusion (L2 error < 1e-4)
+- **Stochastic statistics**: Gillespie variance matches theory within 5%
+
+## Examples
+
+- `examples/minimal_wholecell/`: Simplified cell with diffusion + kinetics
+- `notebooks/frap_validation.ipynb`: Fluorescence recovery validation
+- `notebooks/gillespie_statistics.ipynb`: Stochastic solver verification
+
+## Numerical Conventions
+
+- **Units**: SI (meters, seconds, moles) internally; accepts common bio units
+- **Float precision**: `float64` default
+- **ODE tolerances**: `rtol=1e-6`, `atol=1e-9` (overridable per module)
+- **PDE residuals**: `1e-6` relative
+- **Time**: Global time `t` in seconds (float64)
+
+## Performance Targets
+
+- **Small model** (1000 nodes, 50 species): <500ms per coupling step (Δt=0.1s)
+- **Scaling**: Linear with mesh size for well-conditioned problems
+
+## Citation
+
+If you use this software, please cite:
+```
+[Placeholder for publication]
+```
+
+## License
+
+MIT License (see LICENSE file)
+
+## Contributing
+
+See CONTRIBUTING.md for development guidelines.
+
+## Roadmap
+
+- [x] **MVP (v0.1)**: Core, geometry, kinetics, diffusion, coupling
+- [ ] **Phase 2 (v0.2)**: Membranes, stochastic-deterministic hybrid
+- [ ] **Phase 3 (v0.3)**: Mechanics, organelles, metabolism
+- [ ] **Phase 4 (v1.0)**: GPU acceleration, Rust kernels, full cell case study
+
+## Contact
+
+Issues: https://github.com/yourusername/computational-cell/issues

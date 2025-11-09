@@ -1,0 +1,3 @@
+[console_scripts]
+cc-run = cc.core.run:main
+cc-validate = cc.validation.runner:main

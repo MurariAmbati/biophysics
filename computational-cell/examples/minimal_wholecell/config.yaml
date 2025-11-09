@@ -1,0 +1,55 @@
+# Minimal whole-cell simulation configuration
+
+cell:
+  geometry: examples/minimal_wholecell/cell_mesh.xdmf
+  compartments:
+    cytosol:
+      volume: 4.2e-18  # m³ (≈4 µm³, typical bacterial cell)
+    
+simulation:
+  t_start: 0.0
+  t_end: 10.0  # seconds
+  dt_max: 0.1
+  coupling_dt: 0.01
+  seed: 42
+  rtol: 1.0e-6
+  atol: 1.0e-9
+  output_dir: "examples/minimal_wholecell/output"
+  checkpoint_interval: 5.0
+
+modules:
+  kinetics:
+    solver: "scipy"
+    rtol: 1.0e-6
+    atol: 1.0e-9
+    reactions:
+      - name: "production"
+        stoichiometry:
+          protein: 1
+        rate_law:
+          type: "mass_action"
+          k: 10.0  # molecules/s
+      
+      - name: "degradation"
+        stoichiometry:
+          protein: -1
+        rate_law:
+          type: "mass_action"
+          k: 0.1  # 1/s
+    
+    species:
+      - name: "mRNA"
+        initial_amount: 10.0
+        unit: "molecule"
+      
+      - name: "protein"
+        initial_amount: 0.0
+        unit: "molecule"
+  
+  diffusion:
+    method: "FEM"
+    dt: 0.001
+    species:
+      - name: "glucose"
+        D: 6.0e-10  # m²/s (glucose in water)
+        initial_concentration: 1.0e-3  # mol/m³ (1 mM)
